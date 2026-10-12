@@ -49,6 +49,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnviromentController
   meetingPoint: {fileID: 7854048064238059161}
   rover: {fileID: 6462121851194547058}
+  drone: {fileID: 0}
 --- !u!1 &7854048064238059161
 GameObject:
   m_ObjectHideFlags: 0
@@ -445,7 +446,7 @@ MonoBehaviour:
     hasUpgradedBrainParametersWithActionSpec: 1
   m_Model: {fileID: 0}
   m_InferenceDevice: 0
-  m_BehaviorType: 1
+  m_BehaviorType: 0
   m_BehaviorName: Rover
   TeamId: 0
   m_UseChildSensors: 1
@@ -509,6 +510,7 @@ MonoBehaviour:
   steeringWheel: {fileID: 6420529097342995262}
   drone: {fileID: 0}
   holdTime: 2
+  landingTime: 2
 --- !u!4 &7528327244897838209 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3779459283876841957, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}

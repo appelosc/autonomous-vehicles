@@ -14,7 +14,7 @@ public class RoverAgent : Agent
 
     public float stopRadius = 10f; // radius for stopping
     public float stopSpeed = 0.5f; // speed for stopping
-    public float slowRadius = 25f; // radie där rovern ska börja bromsa in
+    
 
     public float maxSpeed = 25f;          // framåt, m/s
     public float maxReverseSpeed = 5f;    // bakåt, m/s
@@ -171,6 +171,7 @@ public class RoverAgent : Agent
     public override void OnEpisodeBegin()
     {
         env.ResetRoverPosition();
+        env.ResetDronePosition();
         throttle = 0f;
         horizontalInput = 0f;
         currentTurnAngle = 0f;

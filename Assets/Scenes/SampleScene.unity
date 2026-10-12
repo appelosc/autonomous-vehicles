@@ -1848,6 +1848,14 @@ PrefabInstance:
       propertyPath: MaxStep
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1722979584062365845, guid: 31b11260292388b468d4b723c0be7538, type: 3}
+      propertyPath: demoMode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3783393653331524900, guid: 31b11260292388b468d4b723c0be7538, type: 3}
+      propertyPath: drone
+      value: 
+      objectReference: {fileID: 3357641206802454497}
     - target: {fileID: 6855615727341783621, guid: 31b11260292388b468d4b723c0be7538, type: 3}
       propertyPath: m_LocalPosition.x
       value: 447.47183
