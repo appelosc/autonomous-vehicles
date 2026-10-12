@@ -77,6 +77,9 @@ mono_crash.*
 *.unitypackage.meta
 *.app
 
+# ML-Agents generated files
+/results
+/Training
 # Crashlytics generated file
 crashlytics-build.properties
 
@@ -104,3 +107,4 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
