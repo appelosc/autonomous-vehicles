@@ -50,6 +50,8 @@ MonoBehaviour:
   meetingPoint: {fileID: 7854048064238059161}
   rover: {fileID: 6462121851194547058}
   drone: {fileID: 0}
+  terrainCollider: {fileID: 754026029532052023}
+  margin: 50
 --- !u!1 &7854048064238059161
 GameObject:
   m_ObjectHideFlags: 0
@@ -488,7 +490,6 @@ MonoBehaviour:
   maxDistance: 150
   stopRadius: 5
   stopSpeed: 0.5
-  slowRadius: 25
   maxSpeed: 15
   maxReverseSpeed: 5
   maxAngularSpeed: 2

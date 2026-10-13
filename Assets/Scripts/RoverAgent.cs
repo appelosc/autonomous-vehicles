@@ -10,7 +10,7 @@ public class RoverAgent : Agent
 {
     public float enginePower = 2000.0f; // Engine power
 
-    public float maxDistance = 150f; // between meeting point and rover in stage 1
+    public float maxDistance = 566f; // between meeting point and rover in stage 1
 
     public float stopRadius = 10f; // radius for stopping
     public float stopSpeed = 0.5f; // speed for stopping
@@ -153,13 +153,13 @@ public class RoverAgent : Agent
 
     void OnCollisionEnter(Collision collision)
     {
-        if (collision.collider.gameObject == drone.gameObject)
+        if (drone != null && collision.collider.gameObject == drone.gameObject)
             droneOnTruck = true;    // kontakten börjar
     }
 
     void OnCollisionExit(Collision collision)
     {
-        if (collision.collider.gameObject == drone.gameObject)
+        if (drone!= null && collision.collider.gameObject == drone.gameObject)
         {
             droneOnTruck = false;   // drönaren lyfte eller studsade av
             landingTimer = 0f;
@@ -171,7 +171,6 @@ public class RoverAgent : Agent
     public override void OnEpisodeBegin()
     {
         env.ResetRoverPosition();
-        env.ResetDronePosition();
         throttle = 0f;
         horizontalInput = 0f;
         currentTurnAngle = 0f;
@@ -180,8 +179,7 @@ public class RoverAgent : Agent
         droneOnTruck = false;
         arrived = false;
         prevDist = DistanceToTarget();
-        
-        StopAllCoroutines();
+        env.ResetDronePosition();
     }
 
     // Hjälpfunktioner för belöningssytem samt observationern
