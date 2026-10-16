@@ -1912,10 +1912,10 @@ PrefabInstance:
     - target: {fileID: 8002648657040712319, guid: 31b11260292388b468d4b723c0be7538, type: 3}
       propertyPath: m_Model
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 5022602860645237092, guid: 896ab279cb5891042a669099dcaedfd2, type: 3}
     - target: {fileID: 8002648657040712319, guid: 31b11260292388b468d4b723c0be7538, type: 3}
       propertyPath: m_BehaviorType
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8211506877238652839, guid: 31b11260292388b468d4b723c0be7538, type: 3}
       propertyPath: depth
