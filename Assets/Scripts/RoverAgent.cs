@@ -4,67 +4,61 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.MLAgents.Sensors;
+using System;
 
 
 public class RoverAgent : Agent
 {
+    public GameObject steeringWheel;
+    public GameObject drone; // Reference to the drone GameObject
+
+    public Transform centerOfMass; // Center of Mass point
+    public Transform[] wheels; // Array of Wheel Collider components
+    public Transform[] wheelMeshes; // Array of wheel meshes
+
     public float enginePower = 2000.0f; // Engine power
-
+    public float brakePower = 3000f; // brakePower
+    public float turnSpeed = 25.0f; // Maximum turn speed
+    public float turnSmoothness = 5.0f; // Turn smoothness
     public float maxDistance = 566f; // between meeting point and rover in stage 1
-
-    public float stopRadius = 10f; // radius for stopping
+    public float stopRadius = 5f; // radius for stopping
     public float stopSpeed = 0.5f; // speed for stopping
-    
-
-    public float maxSpeed = 25f;          // framåt, m/s
+    public float maxSpeed = 15f;          // framåt, m/s
     public float maxReverseSpeed = 5f;    // bakåt, m/s
     public float maxAngularSpeed = 3f;    // rad/s, används för att normalisera rotationshastigheten
 
     [SerializeField] bool demoMode = false;
-    bool arrived;
-    float prevDist;
-
-    public float brakePower = 3000f; // brakePower
-    public float turnSpeed = 25.0f; // Maximum turn speed
-    public float turnSmoothness = 5.0f; // Turn smoothness
-    public Transform[] wheels; // Array of Wheel Collider components
-    public Transform[] wheelMeshes; // Array of wheel meshes
-    public Transform centerOfMass; // Center of Mass point
-    public GameObject steeringWheel;
-
-    public GameObject drone; // Reference to the drone GameObject
-
-
+    [SerializeField] float holdTime = 2f;   // sekunder
+    [SerializeField] float landingTime = 2f;   // sekunder
+    [SerializeField] float stuckTime = 10f;   // sekunder utan framsteg mot målet innan episoden räknas som misslyckad
 
     private Rigidbody rb; // Car's Rigidbody component
-
     private Transform target;
+    EnviromentController env;
+    WheelCollider[] wheelColliders;
+
     private float currentTurnAngle = 0.0f;
     private float horizontalInput = 0.0f;
     private float throttle = 0.0f;
-
-    [SerializeField] float holdTime = 2f;   // sekunder
+    float prevDist;
+    float bestDist;   // närmaste avstånd till målet hittills i episoden
     float holdTimer;
-
-    [SerializeField] float landingTime = 2f;   // sekunder
     float landingTimer;
+    float stuckTimer;
 
+    bool arrived;
     bool droneOnTruck;
-
-    EnviromentController env;
-    
-    WheelCollider[] wheelColliders;
 
     public override void Initialize()
     {
         env = GetComponentInParent<EnviromentController>();
-        
+
         target = env.meetingPoint.transform;
-        
+
         rb = GetComponent<Rigidbody>();
-        
+
         rb.centerOfMass = centerOfMass.localPosition;
-        
+
         wheelColliders = new WheelCollider[wheels.Length];
         for (int i = 0; i < wheels.Length; i++)
         {
@@ -75,7 +69,7 @@ public class RoverAgent : Agent
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
-       
+
         var discreteActionsOut = actionsOut.DiscreteActions;
         discreteActionsOut[0] = 0; // 0 stilla, 1 framåt, 2 bakåt.
         discreteActionsOut[1] = 0; // 0 stilla,1 vänster, 2 höger
@@ -132,12 +126,32 @@ public class RoverAgent : Agent
 
         AddReward((prevDist - dist) / maxDistance);
         prevDist = dist;
+
+        // fastnat: inte kommit minst 1 m närmare målet på stuckTime sekunder, räknas som misslyckat
+        if (dist < bestDist - 1f)
+        {
+            bestDist = dist;
+            stuckTimer = 0f;
+        }
+        else if (dist > stopRadius)
+        {
+            stuckTimer += Time.fixedDeltaTime;
+            if (stuckTimer >= stuckTime)
+            {
+                Academy.Instance.StatsRecorder.Add("Rover/Stuck", 1f, StatAggregationMethod.Sum);
+                AddReward(-1f);
+                EndEpisode();
+                return;
+            }
+        }
+
         // lyckat: stått still i målet i holdTime sekunder
         if (dist < stopRadius && speed < stopSpeed)
         {
             holdTimer += Time.fixedDeltaTime;
             if (holdTimer >= holdTime)
             {
+                Academy.Instance.StatsRecorder.Add("Rover/Success", 1f, StatAggregationMethod.Sum);
                 AddReward(2f);
                 if (demoMode) arrived = true;
                 else EndEpisode();
@@ -153,32 +167,41 @@ public class RoverAgent : Agent
 
     void OnCollisionEnter(Collision collision)
     {
+        Debug.Log($"Krock med {collision.collider.name}, tag: {collision.collider.tag}");
+        if (collision.collider.CompareTag("Building") || collision.collider.CompareTag("Rock"))
+        {
+            Academy.Instance.StatsRecorder.Add("Rover/Crash", 1f, StatAggregationMethod.Sum);
+            AddReward(-1f);
+            EndEpisode();
+        }
         if (drone != null && collision.collider.gameObject == drone.gameObject)
             droneOnTruck = true;    // kontakten börjar
     }
 
     void OnCollisionExit(Collision collision)
     {
-        if (drone!= null && collision.collider.gameObject == drone.gameObject)
+        if (drone != null && collision.collider.gameObject == drone.gameObject)
         {
             droneOnTruck = false;   // drönaren lyfte eller studsade av
             landingTimer = 0f;
         }
     }
-    // unitys (sleep funktion) vill att spelet tar slut 2 sek efter jag landat med drönaren
+    
 
 
     public override void OnEpisodeBegin()
     {
-        env.ResetRoverPosition();
+        env.ResetEpisode();
         throttle = 0f;
         horizontalInput = 0f;
         currentTurnAngle = 0f;
         holdTimer = 0f;
         landingTimer = 0f;
+        stuckTimer = 0f;
         droneOnTruck = false;
         arrived = false;
         prevDist = DistanceToTarget();
+        bestDist = prevDist;
         env.ResetDronePosition();
     }
 
@@ -207,6 +230,7 @@ public class RoverAgent : Agent
         // angularVelocity är i rad/s, så vi normaliserar med maxAngularSpeed (inte turnSpeed som är styrvinkel i grader)
         return rb.angularVelocity.y / maxAngularSpeed;
     }
+
 
     public override void CollectObservations(VectorSensor sensor)
     {
